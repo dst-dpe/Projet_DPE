@@ -15,7 +15,7 @@ st.set_page_config(
     layout="wide",
 )
 
-DATA_PATH = Path("data/df_viz.csv")       # CSV déjà traité pour les dataviz
+DATA_PATH = Path("https://drive.google.com/file/d/1pxw4kzoXqd00wEgr9Yumexn3qcsozkKM/view?usp=drive_link")       # CSV déjà traité pour les dataviz
 MODEL_PATH = Path("models/model.joblib")  # pipeline/modèle sérialisé (sklearn/joblib)
 # Optionnel: si tu as un scaler/encoder séparé
 # PREPROC_PATH = Path("models/preprocess.joblib")
