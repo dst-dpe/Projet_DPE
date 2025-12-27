@@ -287,8 +287,7 @@ def page_dataviz():
             with col_a:
                 display_img("surface_without_outliers.png", "Surface sans outliers")
             with col_b:
-                display_img("surface_without_outliers_dist.png", "Distribution nettoyée")
-                
+                display_img("surface_without_outliers_dist.png", "Distribution nettoyée")               
                 
 # ----------------------------
 # PAGE 3: Résultats d'entraînement
