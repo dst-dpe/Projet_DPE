@@ -390,12 +390,11 @@ def page_results():
         st.markdown("Comparaison de la convergence selon la taille du batch (Batch Size).")
         
         # Affichage de l'image fournie
-        # Assure-toi que le fichier image_824765.png est renommé ou placé correctement
         try:
-            st.image("img/image_824765.png", caption="Comparaison du Val Loss par Batch Size", use_container_width=True)
+            st.image("img/loss_batch_size.png", caption="Comparaison du Val Loss par Batch Size", use_container_width=True)
             st.info("On remarque qu'un Batch Size plus grand (8192 - courbe verte) converge plus vite et offre une courbe plus stable.")
         except:
-            st.warning("⚠️ Image 'img/image_824765.png' introuvable.")
+            st.warning("⚠️ Image 'img/loss_batch_size.png' introuvable.")
 
 # ----------------------------
 # PAGE 4: Simulateur (Formulaire + Modèle)
