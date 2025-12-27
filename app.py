@@ -5,6 +5,8 @@ import numpy as np
 import altair as alt
 import joblib
 from pathlib import Path
+import streamlit as st
+import os
 
 # ----------------------------
 # CONFIG
@@ -50,7 +52,7 @@ st.sidebar.caption("Projet ML - Simulation DPE")
 # PAGE 1: Présentation
 # ----------------------------
 def page_presentation():
-    # --- Affichage de l'équipe dans la Sidebar (Optionnel mais recommandé) ---
+    # --- Sidebar : L'équipe ---
     with st.sidebar:
         st.markdown("### 👥 L'Équipe")
         st.markdown("""
@@ -60,12 +62,13 @@ def page_presentation():
         * **Guillaume Deschamps**
         """)
         st.divider()
+        st.info("Projet certifié Data Science")
 
     # --- En-tête Principal ---
     st.title("🏡 Projet DPE : Modélisation & Prédiction")
     
     st.markdown("""
-    **Bienvenue sur l'interface de restitution de notre projet de Data Science.**
+    **Bienvenue sur l'interface de restitution de notre projet.**
     
     Ce projet explore les données du *Diagnostic de Performance Énergétique (DPE)* en France. 
     Il vise à appliquer des modèles de Machine Learning pour prédire l'étiquette énergétique des logements 
@@ -75,101 +78,102 @@ def page_presentation():
     st.divider()
 
     # --- Organisation en Onglets ---
-    tab_contexte, tab_objectifs, tab_donnees = st.tabs(["🌍 Contexte", "🎯 Objectifs", "💾 Données"])
+    tab_contexte, tab_objectifs, tab_donnees = st.tabs(["🌍 Contexte & Réforme", "🎯 Objectifs", "💾 Données ADEME"])
 
     # --- ONGLET 1 : CONTEXTE ---
     with tab_contexte:
-        st.header("Le Contexte du Projet")
-        st.markdown("Ce projet s'inscrit dans une démarche pluridisciplinaire :")
+        st.header("Contexte Réglementaire et Technique")
+        
+        st.markdown("""
+        Le DPE a subi une **réforme majeure le 1er juillet 2021** pour devenir un outil opposable et plus fiable. 
+        Notre projet s'appuie exclusivement sur les données issues de ce nouveau cadre.
+        """)
 
-        with st.expander("🛠️ Point de vue **Technique**", expanded=True):
+        with st.expander("⚖️ La Réforme DPE 2021 (Ce qui change)", expanded=True):
             st.markdown("""
-            * **Data Science & Bâtiment :** Exploration de données massives et hétérogènes issues du DPE.
-            * **Complexité Réglementaire :** Le défi est de reproduire une logique réglementaire (paramètres physiques, climatiques, techniques) via des modèles statistiques.
-            * **Stratégie de Modélisation :** Comparaison de modèles supervisés (Classification vs Régression) et gestion de déséquilibres de classes.
+            * **Méthode de calcul unifiée (3CL) :** Fin de la méthode "sur facture". Le calcul est désormais standardisé pour tous les logements.
+            * **Double Seuil :** L'étiquette (A à G) est déterminée par la plus mauvaise note entre la **consommation d'énergie** et les **émissions de gaz à effet de serre (GES)**.
+            * **5 Usages :** Prise en compte de l'éclairage et des auxiliaires (en plus du chauffage, de l'eau chaude et du refroidissement).
             """)
 
-        with st.expander("💰 Point de vue **Économique**", expanded=False):
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.markdown("#### 🛠️ Enjeu Technique")
             st.markdown("""
-            * **Valeur Verte :** Le DPE conditionne aujourd'hui la valeur vénale et locative des biens.
-            * **Aide à la décision :** L'outil vise à simuler une étiquette DPE pour prioriser les travaux de rénovation et réduire l'incertitude pour les investisseurs et bailleurs.
-            * **Optimisation :** Comprendre les facteurs pénalisants pour l'ingénierie financière de la rénovation.
+            La complexité réside dans la reproduction d'une méthode réglementaire stricte par des modèles statistiques.
+            Le défi est de gérer des données hétérogènes (matériaux, systèmes) et de prédire une classe définie par des règles physiques.
             """)
-
-        with st.expander("🔬 Point de vue **Scientifique**", expanded=False):
+        
+        with col_b:
+            st.markdown("#### 💰 Enjeu Économique")
             st.markdown("""
-            * **Limites du ML :** Jusqu'où l'IA peut-elle approcher un système réglementaire contraint ?
-            * **Interprétabilité :** Utilisation de méthodes comme SHAP pour dépasser la "boîte noire" et articuler statistiques et expertise métier.
-            * **Biais :** Analyse de l'impact des classes déséquilibrées sur la prédiction.
+            Le DPE conditionne la valeur vénale ("Valeur Verte") et locative.
+            L'objectif est d'aider à la décision pour prioriser les rénovations et anticiper les interdictions de location (passoires thermiques G+ dès 2023, G en 2025).
             """)
 
     # --- ONGLET 2 : OBJECTIFS ---
     with tab_objectifs:
-        st.header("Objectifs Opérationnels")
+        st.header("Objectifs du Projet")
         
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.info("🤖 **Technique**")
+            st.info("🤖 **Modélisation ML**")
             st.markdown("""
-            * **Prédire** l'étiquette (Classification) et la consommation (Régression).
-            * **Construire** un pipeline robuste.
-            * **Comparer** les familles de modèles (Random Forest, XGBoost, Neural Nets).
-            * **Mesurer** l'impact de la simplification des données.
+            * **Classification :** Prédire l'étiquette DPE (7 classes).
+            * **Régression :** Estimer la consommation en kWh/m²/an.
+            * **Comparaison :** Random Forest vs XGBoost vs Deep Learning.
             """)
 
         with col2:
-            st.warning("📈 **Économique**")
+            st.warning("📊 **Analyse & Biais**")
             st.markdown("""
-            * **Identifier** les déterminants majeurs.
-            * **Différencier** les logements proches des seuils critiques.
-            * **Prioriser** les actions de rénovation.
-            * **Sécuriser** la décision économique.
+            * **Facteurs clés :** Identifier les variables les plus influentes (Feature Importance).
+            * **Déséquilibre :** Gérer la sous-représentation des classes extrêmes (A et G).
+            * **Simplification :** Tester l'impact de la réduction des variables.
             """)
 
         with col3:
-            st.success("🧠 **Scientifique**")
+            st.success("🧠 **Interprétabilité**")
             st.markdown("""
-            * **Approximer** la réglementation par la statistique.
-            * **Analyser** les biais structurels.
-            * **Interpréter** les décisions du modèle (SHAP).
-            * **Critiquer** l'usage de l'IA dans le public.
+            * **Explicabilité :** Utiliser SHAP pour comprendre les décisions du modèle.
+            * **Critique :** Évaluer la capacité du ML à approximer une réglementation.
+            * **Outil métier :** Proposer un simulateur interactif.
             """)
 
-    # --- ONGLET 3 : DONNÉES (MIS À JOUR) ---
+    # --- ONGLET 3 : DONNÉES (ENRICHI) ---
     with tab_donnees:
-        st.header("Jeu de Données et Périmètre")
+        st.header("Le Jeu de Données ADEME")
         
-        # Ligne de métriques pour donner un impact visuel
+        # Métriques mises à jour avec les chiffres officiels
         col_m1, col_m2, col_m3 = st.columns(3)
-        col_m1.metric("Volume Initial", "~12 Millions", "lignes")
-        col_m2.metric("Dimensionnalité", "225", "colonnes")
-        col_m3.metric("Couverture", "France", "Entière")
+        col_m1.metric("Volume Total", "~13.6 Millions (12M au début du projet)", "DPE (Recensement continu)")
+        col_m2.metric("Fréquence", "Hebdomadaire", "Mise à jour")
+        col_m3.metric("Périmètre", "France", "Logements Existants")
 
         st.markdown("---")
         
-        st.markdown("""
-        ### 🔍 Détails du périmètre
-        Les données utilisées proviennent de la base officielle de l'ADEME (Agence de la transition écologique).
-        
-        * **Source :** Base DPE Logements (Existant)
-        * **Périmètre géographique :** France entière (Métropole + DROM).
-        * **Filtre sectoriel :** Uniquement les logements résidentiels (**Appartements** et **Maisons**). 
-        * **Volumétrie brute :** Le jeu de données initial (au lancement du projet) comportait environ 12 millions d'entrées pour 225 variables descriptives.
-        """)
-        
-        st.link_button("Accéder au jeu de données ADEME", "https://data.ademe.fr/datasets/dpe03existant")
-        
-        st.info("""
-        **Pipeline de données :** Le projet a nécessité un important travail de nettoyage pour gérer les valeurs manquantes, 
-        filtrer les données aberrantes et réduire la dimensionnalité afin de ne garder que les variables pertinentes pour la modélisation.
+        st.markdown("### 🔍 Spécificités du Dataset")
+        st.warning("""
+        **⚠️ Attention aux biais d'interprétation :**
+        Selon l'ADEME, cette base n'est **pas représentative de l'ensemble du parc immobilier français**.
+        Elle ne contient que les DPE réalisés obligatoirement lors de **ventes, locations ou constructions neuves**. 
+        Un redressement statistique (croisement avec données INSEE) serait nécessaire pour une extrapolation nationale parfaite.
         """)
 
+        st.markdown("""
+        * **Source :** Base officielle [DPE Logements existants (depuis juillet 2021)](https://data.ademe.fr/datasets/dpe03existant).
+        * **Contenu :** Caractéristiques techniques (bâti, isolation, chauffage), consommations énergétiques et émissions GES.
+        * **Filtres appliqués pour le projet :**
+            * Logements résidentiels uniquement (Maisons & Appartements).
+            * Données nettoyées des valeurs aberrantes et doublons.
+        """)
+        
+        st.caption("Données sous Licence Ouverte / Open Licence version 2.0 - Producteur : ADEME")
 # ----------------------------
 # PAGE 2: Dataviz
 # ----------------------------
-import streamlit as st
-import os
+
 
 def display_img(filename, caption=""):
     """Fonction utilitaire pour gérer l'affichage sécurisé des images"""
