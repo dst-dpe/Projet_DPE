@@ -81,93 +81,50 @@ Ici tu présentes le sujet : DPE, enjeux, objectifs.
 # PAGE 2: Dataviz
 # ----------------------------
 def page_dataviz():
-    st.title("📊 Dataviz")
+    st.title("📊 Visualisation des Données")
+    
+    st.markdown("Cette section présente les résultats clés de l'analyse exploratoire réalisée en amont.")
 
-    # Chargement CSV dataviz
-    if not DATA_PATH.exists():
-        st.error(f"CSV introuvable : {DATA_PATH}")
-        st.stop()
-
-    df = load_viz_data(DATA_PATH)
-
-    st.subheader("Aperçu des données")
-    st.dataframe(df.head(50), use_container_width=True)
-
-    st.markdown("---")
-    st.subheader("Filtres")
-
-    # Exemple de filtres (à adapter à tes colonnes)
-    cols = df.columns.tolist()
-    col_cat = st.selectbox("Colonne catégorielle (optionnel)", ["(aucune)"] + cols, index=0)
-    col_num = st.selectbox("Colonne numérique", cols, index=0)
-
-    df_f = df.copy()
-
-    if col_cat != "(aucune)":
-        vals = sorted(df[col_cat].dropna().unique().tolist())
-        selected = st.multiselect("Valeurs", vals, default=vals[: min(5, len(vals))])
-        if selected:
-            df_f = df_f[df_f[col_cat].isin(selected)]
-
-    st.markdown("---")
-    st.subheader("Graphiques")
-
-    # 1) Histogramme (Altair)
+    # --- Bloc 1 : Distribution ---
+    st.header("1. Distribution des Étiquettes")
+    st.markdown("Répartition des logements par classe énergétique (A à G).")
+    
+    # Assure-toi d'avoir une image nommée 'distrib_dpe.png' dans le dossier img/
     try:
-        chart_hist = (
-            alt.Chart(df_f)
-            .mark_bar()
-            .encode(
-                x=alt.X(f"{col_num}:Q", bin=alt.Bin(maxbins=30)),
-                y="count()",
-                tooltip=["count()"],
-            )
-            .properties(height=320)
-        )
-        st.altair_chart(chart_hist, use_container_width=True)
-    except Exception as e:
-        st.warning(f"Impossible de tracer l'histogramme : {e}")
+        st.image("img/repartition_etiquette_DPE_France.png", caption="Répartition des classes DPE", use_container_width=True)
+    except:
+        st.warning("⚠️ Image 'img/repartition_etiquette_DPE_France.png' introuvable. Pense à l'ajouter dans ton repo !")
 
-    # 2) Scatter si 2 colonnes numériques
-    num_cols = [c for c in cols if pd.api.types.is_numeric_dtype(df[c])]
-    if len(num_cols) >= 2:
-        xcol = st.selectbox("Scatter X", num_cols, index=0)
-        ycol = st.selectbox("Scatter Y", num_cols, index=1)
+    # --- Bloc 2 : Carte ---
+    st.header("2. Cartographie des Passoires Thermiques")
+    st.markdown("Part des logements F et G par département.")
+    
+    try:
+        st.image("img/part_passoires_thermiques_par_departement.png", caption="Géographie des passoires thermiques", use_container_width=True)
+    except:
+        st.warning("⚠️ Image 'img/part_passoires_thermiques_par_departement.png' introuvable.")
 
+    # --- Bloc 3 : Autres Analyses ---
+    st.header("3. Facteurs d'Influence")
+    
+    c1, c2 = st.columns(2)
+    with c1:
+        st.subheader("Impact de la période de construction")
+        st.markdown("Influence de l'année de construction sur la performance.")
         try:
-            chart_scatter = (
-                alt.Chart(df_f)
-                .mark_circle(size=40, opacity=0.35)
-                .encode(
-                    x=alt.X(f"{xcol}:Q"),
-                    y=alt.Y(f"{ycol}:Q"),
-                    tooltip=[xcol, ycol],
-                )
-                .properties(height=380)
-                .interactive()
-            )
-            st.altair_chart(chart_scatter, use_container_width=True)
-        except Exception as e:
-            st.warning(f"Impossible de tracer le scatter : {e}")
+            # Change le nom selon ce que tu as exporté
+            st.image("img/repartition_etiquette_periode.png", use_container_width=True) 
+        except:
+            st.info("Ajoute 'repartition_etiquette_periode.png' pour voir ce graphique.")
 
-    # 3) Agrégations par catégorie (si une catégorie est choisie)
-    if col_cat != "(aucune)" and pd.api.types.is_numeric_dtype(df[col_num]):
-        st.markdown("### Moyenne par catégorie")
+    with c2:
+        st.subheader("Impact de la surface")
+        st.markdown("Répartition des surfaces par étiquette DPE")
         try:
-            agg = df_f.groupby(col_cat, dropna=False)[col_num].mean().reset_index()
-            chart_bar = (
-                alt.Chart(agg)
-                .mark_bar()
-                .encode(
-                    x=alt.X(f"{col_cat}:N", sort="-y"),
-                    y=alt.Y(f"{col_num}:Q"),
-                    tooltip=[col_cat, col_num],
-                )
-                .properties(height=360)
-            )
-            st.altair_chart(chart_bar, use_container_width=True)
-        except Exception as e:
-            st.warning(f"Impossible de tracer l'agrégation : {e}")
+            # Change le nom selon ce que tu as exporté
+            st.image("img/surface_etiquette_boxplot.png", use_container_width=True)
+        except:
+            st.info("Ajoute 'surface_etiquette_boxplot.png' pour voir ce graphique.")
 
 # ----------------------------
 # PAGE 3: Résultats d'entraînement
