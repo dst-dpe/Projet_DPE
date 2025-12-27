@@ -5,8 +5,9 @@ import numpy as np
 import altair as alt
 import joblib
 from pathlib import Path
-import streamlit as st
 import os
+import plotly.express as px
+import random
 
 # ----------------------------
 # CONFIG
@@ -62,7 +63,7 @@ def page_presentation():
         * **Guillaume Deschamps**
         """)
         st.divider()
-        st.info("Projet certifié Data Science")
+        st.info("Projet dans le cadre du cursus Datascientist de Datascientest")
 
     # --- En-tête Principal ---
     st.title("🏡 Projet DPE : Modélisation & Prédiction")
@@ -293,106 +294,231 @@ def page_dataviz():
 # PAGE 3: Résultats d'entraînement
 # ----------------------------
 def page_results():
-    st.title("📈 Résultats d'entraînement")
+    st.title("🤖 Modélisation & Résultats")
+    st.markdown("""
+    Nous avons testé deux approches pour prédire la performance énergétique :
+    1.  **Classification** : Prédire l'étiquette DPE (A à G).
+    2.  **Régression** : Prédire la consommation d'énergie primaire ($kWh/m^2/an$).
+    
+    *Contrainte : Utilisation d'une baseline à 16 colonnes pour gérer la charge mémoire.*
+    """)
 
-    st.markdown(
-        """
-## Modèles testés
-- Baseline
-- RandomForest / XGBoost / NN
-- Optimisation d'hyperparamètres
+    tab_classif, tab_reg = st.tabs(["🔠 Approche Classification", "📈 Approche Régression"])
 
-## Métriques
-- MAE / RMSE / R² (si régression)
-- Accuracy / F1 (si classification)
+    # --- ONGLET 1 : CLASSIFICATION ---
+    with tab_classif:
+        st.header("Classification des étiquettes DPE")
+        st.markdown("Objectif : Prédire la classe exacte (A, B, C, D, E, F, G).")
 
-## Analyse d'erreur
-- où le modèle se trompe le plus
-- biais potentiels
-        """
-    )
+        # 1. Comparaison Baseline
+        st.subheader("1. Benchmark des modèles (Baseline)")
+        data_classif = {
+            "Modèle": ["Random Forest", "KNN", "Decision Tree", "Logistic Regression", "Naive Bayes"],
+            "Accuracy": [0.577, 0.546, 0.526, 0.526, 0.031],
+            "F1-Score": [0.564, 0.539, 0.510, 0.510, 0.024]
+        }
+        df_classif = pd.DataFrame(data_classif).sort_values(by="Accuracy", ascending=False)
+        
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            st.dataframe(df_classif.style.highlight_max(axis=0, color="#d1e7dd"), use_container_width=True)
+        with col2:
+            fig_classif = px.bar(df_classif, x="Accuracy", y="Modèle", orientation='h', 
+                                 title="Précision par modèle (Baseline)", color="Accuracy", color_continuous_scale="Viridis")
+            st.plotly_chart(fig_classif, use_container_width=True)
 
-    st.markdown("---")
-    st.subheader("Illustrations / Courbes")
-    st.info("Ici tu peux ajouter tes figures exportées (PNG) ou des courbes calculées à partir d'un CSV de logs.")
+        # 2. Focus Meilleur Modèle
+        st.subheader("2. Meilleur Modèle : Random Forest Optimisé")
+        st.markdown("Après optimisation des hyperparamètres (GridSearch), les gains sont marginaux, suggérant une limite intrinsèque aux données d'entrée.")
 
-    # Exemple: afficher une image si tu en as
-    # st.image("assets/loss_curve.png", caption="Courbe de loss", use_container_width=True)
+        met1, met2, met3 = st.columns(3)
+        met1.metric("Accuracy Test", "58.3%", delta="+0.6% vs Baseline")
+        met2.metric("F1-Score Weighted", "0.575")
+        met3.metric("Meilleur params", "500 arbres, Max Depth 20")
+
+        # Analyse des erreurs
+        with st.expander("🔎 Analyse détaillée (Matrice de Confusion & Rapport)"):
+            st.markdown("#### Pourquoi plafonne-t-on à 58% ?")
+            st.markdown("""
+            L'analyse de la matrice de confusion montre que les erreurs sont principalement **"à une classe près"** :
+            * Le modèle confond souvent **C et D** (les classes majoritaires).
+            * Difficulté sur les extrêmes (A/B et F/G) à cause du déséquilibre de classe.
+            """)
+            
+            st.markdown("#### Rapport de Classification (Optimisé)")
+            report_data = {
+                "Classe": ["A", "B", "C", "D", "E", "F", "G"],
+                "Precision": [0.65, 0.60, 0.72, 0.56, 0.46, 0.39, 0.53],
+                "Recall": [0.52, 0.33, 0.72, 0.65, 0.48, 0.18, 0.52],
+                "F1-Score": [0.58, 0.43, 0.72, 0.60, 0.47, 0.25, 0.52]
+            }
+            st.dataframe(pd.DataFrame(report_data).set_index("Classe").style.background_gradient(cmap="Reds", subset=["F1-Score"]))
+
+    # --- ONGLET 2 : REGRESSION ---
+    with tab_reg:
+        st.header("Estimation de la consommation énergétique")
+        st.markdown("Objectif : Prédire une valeur continue (kWh/m²/an).")
+
+        # 1. Benchmark ML Classique
+        st.subheader("1. Benchmark Machine Learning")
+        data_reg = {
+            "Modèle": ["Random Forest", "KNN Regressor", "Lasso/Ridge/Linear", "Decision Tree"],
+            "MAE": [44.75, 47.86, 54.79, 59.56],
+            "R²": [0.645, 0.576, 0.491, 0.424]
+        }
+        df_reg = pd.DataFrame(data_reg).sort_values(by="R²", ascending=False)
+        
+        st.dataframe(df_reg.style.highlight_max(subset=["R²"], color="#d1e7dd").highlight_min(subset=["MAE"], color="#d1e7dd"), use_container_width=True)
+        st.caption("Le Random Forest domine largement les modèles linéaires classiques.")
+
+        st.divider()
+
+        # 2. Deep Learning vs Random Forest
+        st.subheader("2. Le saut de performance : Deep Learning")
+        st.markdown("""
+        Nous avons entraîné un réseau de neurones avec plus de colonnes en entrée. 
+        C'est l'approche qui donne les **meilleurs résultats globaux**.
+        """)
+
+        col_res1, col_res2, col_res3 = st.columns(3)
+        col_res1.metric("MAE (Erreur Moyenne)", "36.6 kWh/m²", delta="-7 kWh vs RF", delta_color="normal")
+        col_res2.metric("RMSE", "49.6")
+        col_res3.metric("R² (Score)", "0.69", delta="+0.05 vs RF")
+
+        # 3. Image d'analyse Deep Learning
+        st.markdown("#### Analyse de l'entraînement (Validation Loss)")
+        st.markdown("Comparaison de la convergence selon la taille du batch (Batch Size).")
+        
+        # Affichage de l'image fournie
+        # Assure-toi que le fichier image_824765.png est renommé ou placé correctement
+        try:
+            st.image("img/image_824765.png", caption="Comparaison du Val Loss par Batch Size", use_container_width=True)
+            st.info("On remarque qu'un Batch Size plus grand (8192 - courbe verte) converge plus vite et offre une courbe plus stable.")
+        except:
+            st.warning("⚠️ Image 'img/image_824765.png' introuvable.")
 
 # ----------------------------
 # PAGE 4: Simulateur (Formulaire + Modèle)
 # ----------------------------
-def page_simulator():
-    st.title("🧮 Simulateur DPE")
-    st.write("Renseigne les caractéristiques du logement pour obtenir une estimation.")
-
-    if not MODEL_PATH.exists():
-        st.error(f"Modèle introuvable : {MODEL_PATH}")
-        st.stop()
-
-    model = load_model(MODEL_PATH)
-
-    # ---- Définition des valeurs possibles (à adapter à ton dataset) ----
-    # Idéalement: tu mets ces listes dans un fichier config (yaml/json) ou tu les derives du training.
-    CATS = {
-        "type_batiment": ["Maison", "Appartement"],
-        "periode_construction": ["< 1948", "1949-1974", "1975-2000", "2001-2012", ">= 2013"],
-        "qualite_isolation_murs": ["insuffisante", "moyenne", "bonne", "très bonne"],
-        # ...
+# --- LOGIQUE MÉTIER (Calcul du DPE) ---
+def get_classe_dpe(conso, ges):
+    """
+    Calcule l'étiquette DPE selon la méthode du double seuil (2021).
+    On prend la pire note entre la Conso et le GES.
+    """
+    # Seuils officiels DPE [Conso, GES]
+    seuils = {
+        'A': [70, 6],
+        'B': [110, 11],
+        'C': [180, 30],
+        'D': [250, 50],
+        'E': [330, 70],
+        'F': [420, 100],
+        'G': [float('inf'), float('inf')]
     }
+    
+    def get_letter(val, type_val):
+        idx = 0 if type_val == 'conso' else 1
+        for letter, limits in seuils.items():
+            if val < limits[idx]:
+                return letter
+        return 'G'
 
-    # ---- Formulaire ----
-    with st.form("dpe_form"):
-        st.subheader("Caractéristiques")
+    letter_c = get_letter(conso, 'conso')
+    letter_g = get_letter(ges, 'ges')
+    
+    # Ordre de grandeur pour comparer les lettres (A=1, B=2...)
+    order = "ABCDEFG"
+    return letter_c if order.index(letter_c) > order.index(letter_g) else letter_g
 
+# --- PAGE STREAMLIT ---
+def page_simulator():
+    st.title("🏗️ Simulateur de Performance Énergétique")
+    st.markdown("""
+    Remplissez les caractéristiques du logement pour estimer sa consommation et son étiquette DPE.
+    *Note : Ceci est une maquette, les résultats sont simulés.*
+    """)
+
+    with st.form("form_simulation"):
+        st.subheader("1. Caractéristiques du Bâtiment")
+        
+        # Organisation en 3 colonnes pour compacter l'affichage
         c1, c2, c3 = st.columns(3)
-
+        
         with c1:
-            type_bat = st.selectbox("Type de bâtiment", CATS["type_batiment"])
-            periode = st.selectbox("Période de construction", CATS["periode_construction"])
+            type_bat = st.selectbox("Type de bâtiment", ["Maison", "Appartement", "Immeuble"])
+            surface = st.number_input("Surface habitable (m²)", min_value=9.0, max_value=500.0, value=70.0, step=1.0)
+            periode = st.selectbox("Période de construction", ["Avant 1948", "1949-1974", "1975-1988", "1989-1999", "2000-2005", "2006-2012", "Après 2013"])
+            altitude = st.selectbox("Classe d'altitude", ["< 400m", "400-800m", "> 800m"])
+            zone_clim = st.selectbox("Zone Climatique", ["H1", "H2", "H3"])
 
         with c2:
-            surface = st.number_input("Surface (m²)", min_value=5.0, max_value=1000.0, value=60.0, step=1.0)
-            hauteur = st.number_input("Hauteur sous plafond (m)", min_value=1.8, max_value=4.0, value=2.5, step=0.1)
+            inertie = st.selectbox("Inertie du bâtiment", ["Très légère", "Légère", "Moyenne", "Lourde", "Très lourde"])
+            iso_mur = st.selectbox("Isolation Murs", ["Inconnue", "Non isolé", "Moyenne", "Bonne", "Très bonne"])
+            iso_toit = st.selectbox("Isolation Plancher Haut", ["Inconnue", "Non isolé", "Moyenne", "Bonne", "Très bonne"])
+            iso_env = st.selectbox("Qualité Isolation Enveloppe", ["Insuffisante", "Moyenne", "Bonne", "Très bonne"])
 
         with c3:
-            iso_murs = st.selectbox("Qualité isolation murs", CATS["qualite_isolation_murs"])
-            # Ajoute d'autres champs...
+            # Placeholders pour les systèmes (à remplacer par tes listes complètes plus tard)
+            chauffage_type = st.selectbox("Type installation chauffage", ["Individuel", "Collectif"])
+            generateur_chauff = st.selectbox("Générateur chauffage principal", ["Chaudière gaz standard", "Chaudière condensation", "PAC air/eau", "Radiateur élec", "Poêle bois"])
+            energie_chauff = st.selectbox("Énergie chauffage principale", ["Électricité", "Gaz naturel", "Fioul", "Bois", "Réseau de chaleur"])
+            emetteur = st.selectbox("Type émetteur", ["Radiateur bitube", "Radiateur monotube", "Plancher chauffant"])
+            ecs_type = st.selectbox("Type installation ECS", ["Individuel", "Collectif"])
+            energie_ecs = st.selectbox("Énergie ECS", ["Électricité", "Gaz", "Fioul"])
 
-        submitted = st.form_submit_button("Calculer le DPE")
+        # Champs techniques supplémentaires (Repliés pour ne pas surcharger si moins importants)
+        with st.expander("Paramètres avancés (Énergies secondaires)"):
+            sc1, sc2 = st.columns(2)
+            with sc1:
+                st.selectbox("Type énergie n°1", ["Aucune", "Électricité", "Gaz"], key="e1")
+                st.selectbox("Type énergie générateur n°1 ECS", ["Aucune", "Électricité", "Gaz"], key="e1_ecs")
+            with sc2:
+                st.selectbox("Type énergie n°2", ["Aucune", "Bois", "Solaire"], key="e2")
+                st.selectbox("Générateur chauffage principal ECS", ["Indépendant", "Combiné"], key="gen_ecs")
 
-    # ---- Inférence ----
+        # Bouton de soumission centré
+        submitted = st.form_submit_button("🚀 Lancer la simulation", use_container_width=True)
+
+    # --- RÉSULTATS ---
     if submitted:
-        # Construire une ligne au format modèle
-        # IMPORTANT: les noms de colonnes doivent correspondre à ceux utilisés au training
-        X = pd.DataFrame([{
-            "type_batiment": type_bat,
-            "periode_construction": periode,
-            "surface_habitable": surface,
-            "hauteur_sous_plafond": hauteur,
-            "qualite_isolation_murs": iso_murs,
-            # ...
-        }])
+        # Simulation Aléatoire (Mock)
+        conso_simulee = random.randint(5, 398)
+        ges_simule = random.randint(2, 68)
+        classe_finale = get_classe_dpe(conso_simulee, ges_simule)
 
-        try:
-            pred = model.predict(X)
+        st.divider()
+        st.header("Résultats de l'estimation")
 
-            # Si ton modèle renvoie un scalaire
-            y = float(np.ravel(pred)[0])
+        # Affichage metrics
+        col_res1, col_res2 = st.columns([1, 2])
 
-            st.success("Résultat calculé ✅")
-            st.metric("Estimation (valeur)", f"{y:,.2f}")
+        with col_res1:
+            st.markdown("### Indicateurs")
+            st.metric("Consommation (Ep)", f"{conso_simulee} kWh/m²/an")
+            st.metric("Émissions (GES)", f"{ges_simule} kgCO₂/m²/an")
+            
+            # Affichage de la lettre en gros (CSS hack rapide pour le style)
+            color_map = {'A': '#009036', 'B': '#53af31', 'C': '#c6d300', 'D': '#fce600', 'E': '#fbba00', 'F': '#eb6105', 'G': '#d40f14'}
+            st.markdown(f"""
+            <div style="text-align: center; background-color: {color_map[classe_finale]}; padding: 10px; border-radius: 10px;">
+                <h1 style="color: white; margin:0;">CLASSE {classe_finale}</h1>
+            </div>
+            """, unsafe_allow_html=True)
 
-            # Option: transformer en étiquette DPE si tu as un mapping
-            # etiquette = to_dpe_label(y)
-            # st.metric("Étiquette DPE", etiquette)
+        with col_res2:
+            st.markdown("### Étiquette Officielle")
+            # Construction de l'URL pour l'image dynamique
+            base_url = "https://www.outils.immo/outils-immo.php"
+            params = f"?type=dpe&modele=2021&valeur={conso_simulee}&lettre={classe_finale}&valeurges={ges_simule}"
+            full_url = base_url + params
+            
+            # Affichage de l'image
+            st.image(full_url, caption=f"DPE généré pour {conso_simulee} kWh et {ges_simule} kgCO₂", use_container_width=True)
 
-            with st.expander("Voir les données envoyées au modèle"):
-                st.dataframe(X, use_container_width=True)
+        st.success("Simulation terminée avec succès (Données aléatoires).")
 
-        except Exception as e:
-            st.error("Erreur lors du calcul. Vérifie la compatibilité features / preprocessing.")
-            st.exception(e)
+
 
 # ----------------------------
 # ROUTER
