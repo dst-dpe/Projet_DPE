@@ -50,82 +50,242 @@ st.sidebar.caption("Projet ML - Simulation DPE")
 # PAGE 1: Présentation
 # ----------------------------
 def page_presentation():
-    st.title("🏠 Simulation DPE par Machine Learning")
+    # --- Affichage de l'équipe dans la Sidebar (Optionnel mais recommandé) ---
+    with st.sidebar:
+        st.markdown("### 👥 L'Équipe")
+        st.markdown("""
+        * **Yacine Bennouna**
+        * **Aymane Karani**
+        * **Dylan Nefnaf**
+        * **Guillaume Deschamps**
+        """)
+        st.divider()
 
-    st.markdown(
-        """
-## Contexte
-Ici tu présentes le sujet : DPE, enjeux, objectifs.
+    # --- En-tête Principal ---
+    st.title("🏡 Projet DPE : Modélisation & Prédiction")
+    
+    st.markdown("""
+    **Bienvenue sur l'interface de restitution de notre projet de Data Science.**
+    
+    Ce projet explore les données du *Diagnostic de Performance Énergétique (DPE)* en France. 
+    Il vise à appliquer des modèles de Machine Learning pour prédire l'étiquette énergétique des logements 
+    et comprendre les facteurs déterminants de la consommation, à la croisée des enjeux techniques, économiques et scientifiques.
+    """)
 
-## Données
-- Sources
-- Variables (features)
-- Target (ex: conso énergie / étiquette)
+    st.divider()
 
-## Approche ML
-- Préprocessing
-- Modèles testés
-- Métriques
-        """
-    )
+    # --- Organisation en Onglets ---
+    tab_contexte, tab_objectifs, tab_donnees = st.tabs(["🌍 Contexte", "🎯 Objectifs", "💾 Données"])
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Nb. lignes", "—")
-    with col2:
-        st.metric("Nb. variables", "—")
-    with col3:
-        st.metric("Score final", "—")
+    # --- ONGLET 1 : CONTEXTE ---
+    with tab_contexte:
+        st.header("Le Contexte du Projet")
+        st.markdown("Ce projet s'inscrit dans une démarche pluridisciplinaire :")
+
+        with st.expander("🛠️ Point de vue **Technique**", expanded=True):
+            st.markdown("""
+            * **Data Science & Bâtiment :** Exploration de données massives et hétérogènes issues du DPE.
+            * **Complexité Réglementaire :** Le défi est de reproduire une logique réglementaire (paramètres physiques, climatiques, techniques) via des modèles statistiques.
+            * **Stratégie de Modélisation :** Comparaison de modèles supervisés (Classification vs Régression) et gestion de déséquilibres de classes.
+            """)
+
+        with st.expander("💰 Point de vue **Économique**", expanded=False):
+            st.markdown("""
+            * **Valeur Verte :** Le DPE conditionne aujourd'hui la valeur vénale et locative des biens.
+            * **Aide à la décision :** L'outil vise à simuler une étiquette DPE pour prioriser les travaux de rénovation et réduire l'incertitude pour les investisseurs et bailleurs.
+            * **Optimisation :** Comprendre les facteurs pénalisants pour l'ingénierie financière de la rénovation.
+            """)
+
+        with st.expander("🔬 Point de vue **Scientifique**", expanded=False):
+            st.markdown("""
+            * **Limites du ML :** Jusqu'où l'IA peut-elle approcher un système réglementaire contraint ?
+            * **Interprétabilité :** Utilisation de méthodes comme SHAP pour dépasser la "boîte noire" et articuler statistiques et expertise métier.
+            * **Biais :** Analyse de l'impact des classes déséquilibrées sur la prédiction.
+            """)
+
+    # --- ONGLET 2 : OBJECTIFS ---
+    with tab_objectifs:
+        st.header("Objectifs Opérationnels")
+        
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.info("🤖 **Technique**")
+            st.markdown("""
+            * **Prédire** l'étiquette (Classification) et la consommation (Régression).
+            * **Construire** un pipeline robuste.
+            * **Comparer** les familles de modèles (Random Forest, XGBoost, Neural Nets).
+            * **Mesurer** l'impact de la simplification des données.
+            """)
+
+        with col2:
+            st.warning("📈 **Économique**")
+            st.markdown("""
+            * **Identifier** les déterminants majeurs.
+            * **Différencier** les logements proches des seuils critiques.
+            * **Prioriser** les actions de rénovation.
+            * **Sécuriser** la décision économique.
+            """)
+
+        with col3:
+            st.success("🧠 **Scientifique**")
+            st.markdown("""
+            * **Approximer** la réglementation par la statistique.
+            * **Analyser** les biais structurels.
+            * **Interpréter** les décisions du modèle (SHAP).
+            * **Critiquer** l'usage de l'IA dans le public.
+            """)
+
+    # --- ONGLET 3 : DONNÉES (MIS À JOUR) ---
+    with tab_donnees:
+        st.header("Jeu de Données et Périmètre")
+        
+        # Ligne de métriques pour donner un impact visuel
+        col_m1, col_m2, col_m3 = st.columns(3)
+        col_m1.metric("Volume Initial", "~12 Millions", "lignes")
+        col_m2.metric("Dimensionnalité", "225", "colonnes")
+        col_m3.metric("Couverture", "France", "Entière")
+
+        st.markdown("---")
+        
+        st.markdown("""
+        ### 🔍 Détails du périmètre
+        Les données utilisées proviennent de la base officielle de l'ADEME (Agence de la transition écologique).
+        
+        * **Source :** Base DPE Logements (Existant)
+        * **Périmètre géographique :** France entière (Métropole + DROM).
+        * **Filtre sectoriel :** Uniquement les logements résidentiels (**Appartements** et **Maisons**). 
+        * **Volumétrie brute :** Le jeu de données initial (au lancement du projet) comportait environ 12 millions d'entrées pour 225 variables descriptives.
+        """)
+        
+        st.link_button("Accéder au jeu de données ADEME", "https://data.ademe.fr/datasets/dpe03existant")
+        
+        st.info("""
+        **Pipeline de données :** Le projet a nécessité un important travail de nettoyage pour gérer les valeurs manquantes, 
+        filtrer les données aberrantes et réduire la dimensionnalité afin de ne garder que les variables pertinentes pour la modélisation.
+        """)
 
 # ----------------------------
 # PAGE 2: Dataviz
 # ----------------------------
+import streamlit as st
+import os
+
+def display_img(filename, caption=""):
+    """Fonction utilitaire pour gérer l'affichage sécurisé des images"""
+    path = f"img/{filename}"
+    if os.path.exists(path):
+        st.image(path, caption=caption, use_container_width=True)
+    else:
+        st.warning(f"⚠️ Image manquante : {path}")
+
 def page_dataviz():
-    st.title("📊 Visualisation des Données")
-    
-    st.markdown("Cette section présente les résultats clés de l'analyse exploratoire réalisée en amont.")
+    st.title("📊 Visualisation des Données DPE")
+    st.markdown("""
+    Cette section explore la répartition des classes énergétiques en France et analyse les corrélations 
+    avec les caractéristiques physiques et géographiques des logements.
+    """)
 
-    # --- Bloc 1 : Distribution ---
-    st.header("1. Distribution des Étiquettes")
-    st.markdown("Répartition des logements par classe énergétique (A à G).")
-    
-    # Assure-toi d'avoir une image nommée 'distrib_dpe.png' dans le dossier img/
-    try:
-        st.image("img/repartition_etiquette_DPE_France.png", caption="Répartition des classes DPE", use_container_width=True)
-    except:
-        st.warning("⚠️ Image 'img/repartition_etiquette_DPE_France.png' introuvable. Pense à l'ajouter dans ton repo !")
+    # Création d'onglets pour organiser la navigation
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "🌍 Panorama National", 
+        "🗺️ Géographie & Climat", 
+        "🏗️ Caractéristiques Bâti", 
+        "⏳ Temps & Surface"
+    ])
 
-    # --- Bloc 2 : Carte ---
-    st.header("2. Cartographie des Passoires Thermiques")
-    st.markdown("Part des logements F et G par département.")
-    
-    try:
-        st.image("img/part_passoires_thermiques_par_departement.png", caption="Géographie des passoires thermiques", use_container_width=True)
-    except:
-        st.warning("⚠️ Image 'img/part_passoires_thermiques_par_departement.png' introuvable.")
+    # --- ONGLET 1 : PANORAMA NATIONAL ---
+    with tab1:
+        st.header("État des lieux du parc immobilier")
+        
+        st.markdown("### 1. Répartition DPE & GES")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("**Étiquette Énergie (DPE)**")
+            display_img("repartition_etiquette_DPE_France.png", "Répartition nationale des DPE")
+        with col2:
+            st.markdown("**Étiquette Climat (GES)**")
+            display_img("repartition_etiquette_GES_France.png", "Répartition nationale des GES")
+            
+        st.info("💡 **Note :** On observe souvent une corrélation entre les étiquettes DPE et GES, bien que le mode de chauffage influence fortement le GES.")
 
-    # --- Bloc 3 : Autres Analyses ---
-    st.header("3. Facteurs d'Influence")
-    
-    c1, c2 = st.columns(2)
-    with c1:
-        st.subheader("Impact de la période de construction")
-        st.markdown("Influence de l'année de construction sur la performance.")
-        try:
-            # Change le nom selon ce que tu as exporté
-            st.image("img/repartition_etiquette_periode.png", use_container_width=True) 
-        except:
-            st.info("Ajoute 'repartition_etiquette_periode.png' pour voir ce graphique.")
+        st.markdown("### 2. Consommation réelle")
+        display_img("repartition_conso_France.png", "Distribution de la consommation énergétique (kWh/m²/an)")
 
-    with c2:
-        st.subheader("Impact de la surface")
-        st.markdown("Répartition des surfaces par étiquette DPE")
-        try:
-            # Change le nom selon ce que tu as exporté
-            st.image("img/surface_etiquette_boxplot.png", use_container_width=True)
-        except:
-            st.info("Ajoute 'surface_etiquette_boxplot.png' pour voir ce graphique.")
+    # --- ONGLET 2 : GÉOGRAPHIE ---
+    with tab2:
+        st.header("Disparités Territoriales")
+        
+        st.markdown("### 1. La France des passoires vs bâtiments écolos")
+        c1, c2 = st.columns(2)
+        with c1:
+            display_img("part_passoires_thermiques_par_departement.png", "Part des passoires (F & G)")
+        with c2:
+            display_img("part_batiments_ecolo_par_departements.png", "Part des bâtiments performants (A & B)")
 
+        st.markdown("---")
+        
+        st.markdown("### 2. Influence de l'environnement")
+        c3, c4 = st.columns(2)
+        with c3:
+            st.subheader("Par Région")
+            display_img("repartition_DPE_regions.png", "DPE par Région administrative")
+        with c4:
+            st.subheader("Par Zone Climatique")
+            display_img("repartition_zone_climatique.png", "Impact du climat local")
+            
+        st.markdown("#### Focus Altitude")
+        display_img("repartition_classe_altitude.png", "Répartition des classes selon l'altitude")
+
+    # --- ONGLET 3 : CARACTÉRISTIQUES BÂTI ---
+    with tab3:
+        st.header("Impact technique sur la performance")
+
+        st.markdown("### 1. Type de bâtiment & Énergie")
+        # Comparaison Maison vs Appartement (DPE & GES)
+        c1, c2 = st.columns(2)
+        with c1:
+            display_img("etiquette_DPE_type_bat.png", "DPE selon le type de logement")
+        with c2:
+            display_img("etiquette_GES_type_bat.png", "GES selon le type de logement")
+            
+        st.markdown("#### Source d'énergie principale")
+        display_img("repartition_type_energie_n1.png", "Répartition par type d'énergie")
+
+        st.markdown("---")
+        st.markdown("### 2. Inertie du bâtiment")
+        st.markdown("L'inertie thermique joue un rôle clé dans le confort et la performance.")
+        display_img("repartition_classe_inertie_batiment.png", "Classement selon l'inertie")
+
+    # --- ONGLET 4 : TEMPS ET SURFACE ---
+    with tab4:
+        st.header("Construction et Dimensions")
+
+        st.markdown("### 1. L'impact de l'ancienneté")
+        st.markdown("L'évolution des normes de construction au fil du temps :")
+        
+        c1, c2 = st.columns(2)
+        with c1:
+            display_img("repartition_etiquette_periode.png", "Étiquettes par période de construction")
+        with c2:
+            display_img("repartition_periode_etiquette.png", "Périodes de construction par étiquette")
+
+        st.markdown("---")
+
+        st.markdown("### 2. L'impact de la surface")
+        st.markdown("Les petites surfaces sont-elles défavorisées par le calcul du DPE ?")
+        
+        display_img("surface_etiquette_boxplot.png", "Distribution des surfaces par étiquette")
+
+        with st.expander("🔎 Détail du nettoyage des données (Outliers)"):
+            st.write("Analyse de la distribution des surfaces avant et après traitement des valeurs aberrantes.")
+            col_a, col_b = st.columns(2)
+            with col_a:
+                display_img("surface_without_outliers.png", "Surface sans outliers")
+            with col_b:
+                display_img("surface_without_outliers_dist.png", "Distribution nettoyée")
+                
+                
 # ----------------------------
 # PAGE 3: Résultats d'entraînement
 # ----------------------------
